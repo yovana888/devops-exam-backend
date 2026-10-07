@@ -11,6 +11,7 @@ yarn.lock
 # Coveralls
 .nyc_output
 coverage
+k8s-config.yaml
 
 # Benchmarking
 benchmarks/graphs
