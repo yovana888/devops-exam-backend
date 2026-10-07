@@ -41,8 +41,8 @@ spec:
     spec:
       containers:
         - name: backend
-          image: devops-exam-backend:1.0
-          imagePullPolicy: IfNotPresent
+          image: yovana888/devops-exam-backend:1.0
+          imagePullPolicy: Always
           ports:
             - containerPort: 3000
           envFrom:
