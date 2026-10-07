@@ -17,3 +17,11 @@ benchmarks/graphs
 
 k8s-config.yaml
 
+# Archivos de estado y binarios de Terraform
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.backup
+**/.terraform.lock.hcl
+
+# Clave SSH privada generada
+**/*.pem
