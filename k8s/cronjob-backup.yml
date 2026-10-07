@@ -1,0 +1,81 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mysql-backup-cronjob
+  namespace: backend
+spec:
+  schedule: "0 */3 * * *" # Se ejecuta cada 3 horas
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: mysql-aws-backup
+              image: amazon/aws-cli:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  
+                  # 1. Instalar el cliente de MySQL/MariaDB
+                  yum install -y mariadb105
+
+                  # 2. Generar el timestamp con formato YYYYMMDDHHMMSS
+                  TIMESTAMP=$(date +%Y%m%d%H%M%S)
+                  BACKUP_FILE="/tmp/backup_${MYSQL_DATABASE}_${TIMESTAMP}.sql.gz"
+                  
+                  echo "=== Iniciando respaldo de MySQL ==="
+                  
+                  # 3. Dump y compresión
+                  mysqldump -h ${DB_HOST} -u ${MYSQL_USER} -p"${MYSQL_PASSWORD}" ${MYSQL_DATABASE} | gzip > ${BACKUP_FILE}
+                  
+                  echo "=== Subiendo respaldo a AWS S3 ==="
+                  
+                  # 4. Construcción de la ruta: velasquez_cruz/database/YYYYMMDDHHMMSS/
+                  S3_PATH="s3://${BUCKET_NAME}/${ALUMNO_APELLIDO}/database/${TIMESTAMP}/backup_${MYSQL_DATABASE}.sql.gz"
+                  
+                  # 5. Enviar archivo a S3
+                  aws s3 cp ${BACKUP_FILE} ${S3_PATH}
+                  
+                  echo "=== Respaldo completado con éxito en: ${S3_PATH} ==="
+              env:
+                - name: DB_HOST
+                  value: "mysql"
+                - name: BUCKET_NAME
+                  value: "bucket-codigo-aws-backup"
+                - name: ALUMNO_APELLIDO
+                  value: "velasquez_cruz"
+                - name: MYSQL_DATABASE
+                  valueFrom:
+                    secretKeyRef:
+                      name: mysql-secret
+                      key: MYSQL_DATABASE
+                - name: MYSQL_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: mysql-secret
+                      key: MYSQL_USER
+                - name: MYSQL_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: mysql-secret
+                      key: MYSQL_PASSWORD
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: aws-credentials
+                      key: AWS_ACCESS_KEY_ID
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: aws-credentials
+                      key: AWS_SECRET_ACCESS_KEY
+                - name: AWS_DEFAULT_REGION
+                  valueFrom:
+                    secretKeyRef:
+                      name: aws-credentials
+                      key: AWS_DEFAULT_REGION
