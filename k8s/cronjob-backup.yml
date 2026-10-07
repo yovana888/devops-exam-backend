@@ -4,7 +4,7 @@ metadata:
   name: mysql-backup-cronjob
   namespace: backend
 spec:
-  schedule: "0 2 * * *" # Se ejecuta a las 2 AM
+  schedule: "0 */3 * * *" # Se ejecuta cada 3 horas (00:00, 03:00, 06:00, etc.)
   jobTemplate:
     spec:
       template:
@@ -20,11 +20,11 @@ spec:
                   # 1. Instalar cliente mariadb/mysql
                   yum install -y mariadb105
 
-                  # 2. Generar el nombre de archivo con formato: apellido_backup_YYYYMMDDHHMMSS.sql
+                  # 2. Generar el nombre de archivo con timestamp
                   BACKUP_FILE="/tmp/${ALUMNO_APELLIDO}_backup_$(date +%Y%m%d%H%M%S).sql"
 
-                  # 3. Hacer el dump de MySQL usando las variables de entorno
-                  mysqldump -h "$DB_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" > "$BACKUP_FILE"
+                  # 3. Hacer el dump de MySQL (--no-tablespaces evita la advertencia de permisos)
+                  mysqldump -h "$DB_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" --no-tablespaces "$MYSQL_DATABASE" > "$BACKUP_FILE"
 
                   # 4. Subir el respaldo a AWS S3
                   aws s3 cp "$BACKUP_FILE" "s3://${BUCKET_NAME}/"
