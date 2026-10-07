@@ -11,18 +11,7 @@ metadata:
 data:
   MY_DATABASE_DRIVER: "mysql"
   DB_HOST: "mysql"
-  DB_USER_NAME: "appuser"
-  DB_NAME: "database"
   DB_PORT: "3306"
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: backend-secret
-  namespace: backend
-type: Opaque
-stringData:
-  DB_PASSWORD: "cambia-este-password"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -48,8 +37,23 @@ spec:
           envFrom:
             - configMapRef:
                 name: backend-config
-            - secretRef:
-                name: backend-secret
+          env:
+            # Mapeo dinámico desde mysql-secret (gestionado por GitHub Actions)
+            - name: DB_USER_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_USER
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_DATABASE
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_PASSWORD
 ---
 apiVersion: v1
 kind: Service
