@@ -6,4 +6,5 @@ CREATE TABLE IF NOT EXISTS usuarios (
     sexo CHAR(1)
 );
 
-INSERT INTO usuarios (nombre, apellido, edad, sexo) VALUES ('Maria', 'Rojas', 30, 'F');
+INSERT IGNORE INTO usuarios (id, nombre, apellido, edad, sexo) 
+VALUES (1, 'Maria', 'Rojas', 30, 'F');
