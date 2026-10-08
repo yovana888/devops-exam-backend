@@ -1,0 +1,39 @@
+name: Cambiar Driver de Base de Datos
+
+on:
+  workflow_dispatch:
+    inputs:
+      recurso:
+        description: 'Recurso de Kubernetes (ej. deployment, statefulset)'
+        required: true
+        default: 'deployment'
+      driver:
+        description: 'Selecciona el Driver de BD'
+        required: true
+        type: choice
+        options:
+          - mysql
+          - postgres
+          - mongo
+
+jobs:
+  actualizar-driver:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+        with:
+          ref: modificador
+
+      - name: Mostrar parámetros seleccionados
+        run: |
+          echo "Recurso seleccionado: ${{ github.event.inputs.recurso }}"
+          echo "Driver seleccionado: ${{ github.event.inputs.driver }}"
+
+      - name: Simular cambio de configuración o variable
+        run: |
+          # Aquí puedes actualizar una variable de entorno en tu YAML de Kubernetes o archivo de configuración
+          echo "Actualizando conexión a la base de datos para usar: ${{ github.event.inputs.driver }}"
+          
+          # Ejemplo rápido si tienes un archivo de config (ajusta la ruta según tu proyecto)
+          # sed -i 's/DB_DRIVER=.*/DB_DRIVER=${{ github.event.inputs.driver }}/g' k8s/deployment.yaml
