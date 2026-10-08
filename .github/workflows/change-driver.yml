@@ -33,13 +33,13 @@ jobs:
 
       - name: Aplicar cambio de driver en Kubernetes
         run: |
-          echo "Actualizando el recurso ${{ github.event.inputs.recurso }} con el driver: ${{ github.event.inputs.driver }}"
+          echo "Actualizando el recurso ${{ github.event.inputs.recurso }}/backend en el namespace backend con el driver: ${{ github.event.inputs.driver }}"
           
-          # Actualiza la variable de entorno del driver en tu deployment de Kubernetes
-          kubectl set env ${{ github.event.inputs.recurso }}/backend DB_DRIVER=${{ github.event.inputs.driver }}
+          # Aquí '${{ github.event.inputs.recurso }}' tomará lo que escribas en la UI (ej. deployment)
+          kubectl set env ${{ github.event.inputs.recurso }}/backend -n backend MY_DATABASE_DRIVER=${{ github.event.inputs.driver }}
           
-          # Fuerza un reinicio del recurso para que tome la nueva conexión inmediatamente
-          kubectl rollout restart ${{ github.event.inputs.recurso }}/backend
+          # Reinicio usando también el input dinámico
+          kubectl rollout restart ${{ github.event.inputs.recurso }}/backend -n backend
           
-          # Muestra el estado actual para que quede en la bitácora como evidencia
-          kubectl get pods
+          # Verificación
+          kubectl get pods -n backend
