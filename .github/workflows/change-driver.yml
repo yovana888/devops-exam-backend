@@ -1,0 +1,45 @@
+name: Cambiar Driver de Base de Datos
+
+on:
+  workflow_dispatch:
+    inputs:
+      recurso:
+        description: 'Recurso de Kubernetes (ej. deployment)'
+        required: true
+        default: 'deployment'
+      driver:
+        description: 'Selecciona el Driver de BD'
+        required: true
+        type: choice
+        options:
+          - mysql
+          - postgres
+          - mongo
+
+jobs:
+  actualizar-cluster:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+        with:
+          ref: modificador
+
+      - name: Configurar kubectl
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Aplicar cambio de driver en Kubernetes
+        run: |
+          echo "Actualizando el recurso ${{ github.event.inputs.recurso }} con el driver: ${{ github.event.inputs.driver }}"
+          
+          # Actualiza la variable de entorno del driver en tu deployment de Kubernetes
+          kubectl set env ${{ github.event.inputs.recurso }}/backend DB_DRIVER=${{ github.event.inputs.driver }}
+          
+          # Fuerza un reinicio del recurso para que tome la nueva conexión inmediatamente
+          kubectl rollout restart ${{ github.event.inputs.recurso }}/backend
+          
+          # Muestra el estado actual para que quede en la bitácora como evidencia
+          kubectl get pods
